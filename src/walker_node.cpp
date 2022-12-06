@@ -104,6 +104,71 @@ void Planner::scan_callback(const SCAN& scan_msg) {
 void Planner::timer_callback() {
     if (laser_.header.stamp.sec == 0)
       return;
+
+    auto message = TWIST();
+
+    switch (state_) {
+        case FORWARD:
+        if (isObstacle() == true) {
+            state_ = STOP;
+            message.linear.x = 0.0;
+            message.linear.y = 0.0;
+            message.linear.z = 0.0;
+            publisher_->publish(message);
+            RCLCPP_INFO_STREAM(this->get_logger(), "State = STOP");
+        }
+        break;
+
+        case STOP:
+        if (isObstacle() == true) {
+            state_ = TURN;
+            message.linear.x = 0.0;
+            message.linear.y = 0.0;
+            message.angular.z = 0.1;
+            publisher_->publish(message);
+            RCLCPP_INFO_STREAM(this->get_logger(), "State = TURN");
+        } else {
+            state_ = FORWARD;
+            message.linear.x = 0.2;
+            message.linear.y = 0.0;
+            message.linear.z = 0.0;
+            publisher_->publish(message);
+            RCLCPP_INFO_STREAM(this->get_logger(), "State = FORWARD");
+        }
+        break;
+
+        case TURN:
+        if (isObstacle() == false) {
+            state_ = FORWARD;
+            message.linear.x = 0.2;
+            message.linear.y = 0.0;
+            message.linear.z = 0.0;
+            publisher_->publish(message);
+            RCLCPP_INFO_STREAM(this->get_logger(), "State = FORWARD");
+        }
+        break;
+    }
+
+}
+
+bool Planner::isObstacle() {
+
+    int scan_size = laser_.ranges.size();
+    for(int i=0 ; i < scan_size ; i++) {
+        if(laser_.ranges[i] == 0 || laser_.ranges[i] >= DBL_MAX) {
+            //skipping invalid laser scans
+            continue;
+        }
+
+        if(laser_.ranges[i] < 1.0){
+            // if any laser reading is closer than 1 m
+            // then its an obstacle
+            RCLCPP_INFO_STREAM(this->get_logger(), "Obstacle Present");
+            return true;
+        }
+    }
+
+    return false;
 }
 
 int main(int argc, char * argv[]) {
