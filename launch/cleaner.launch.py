@@ -38,20 +38,18 @@
 #  *  @brief launch file to launch turtlebot simulation and walker node
 #  */
 
-from launch import LaunchDescription
-from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition
-
+from launch import LaunchDescription
+from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-
 import os
 
 def generate_launch_description():
     
-    record_bag = LaunchConfiguration('enable_recording')
+    record_bag = LaunchConfiguration('record_bag')
 
     return LaunchDescription([
 
