@@ -74,10 +74,12 @@ class Planner : public rclcpp::Node {
             auto pubTopicName = "cmd_vel";
             publisher_ = this->create_publisher<TWIST>(pubTopicName, 10);
 
+            auto default_qos = rclcpp::QoS(rclcpp::SensorDataQoS());
+
             auto subTopicName = "/scan";
             auto scanCallback = std::bind(&Planner::scan_callback, this, _1);
             subscription_ = this->create_subscription<SCAN>
-                                    (subTopicName, 10, scanCallback);
+                                    (subTopicName, default_qos, scanCallback);
 
             auto timerCallback = std::bind(&Planner::timer_callback, this);
             timer_ = this->create_wall_timer(100ms, timerCallback);            
@@ -95,6 +97,7 @@ class Planner : public rclcpp::Node {
         //member prototypes
         void scan_callback(const SCAN&);
         void timer_callback();
+        bool isObstacle();
 };
 
 void Planner::scan_callback(const SCAN& scan_msg) {
@@ -155,7 +158,7 @@ bool Planner::isObstacle() {
 
     int scan_size = laser_.ranges.size();
     for(int i=0 ; i < scan_size ; i++) {
-        if(laser_.ranges[i] == 0 || laser_.ranges[i] >= DBL_MAX) {
+        if(laser_.ranges[i] <= laser_.range_min || laser_.ranges[i] >= laser_.range_max) {
             //skipping invalid laser scans
             continue;
         }
