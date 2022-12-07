@@ -73,7 +73,7 @@ def generate_launch_description():
         ExecuteProcess(
         condition=IfCondition(record_bag),
         cmd=[
-            'ros2', 'bag', 'record', '-o turtle_bag', '-a', '-x', 'demo_cam/camera/.*' 
+            'ros2', 'bag', 'record', '-o turtle_bag', '-a', '-x /camera.+' 
         ],
         shell=True
         )
